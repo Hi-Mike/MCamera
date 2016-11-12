@@ -91,6 +91,7 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
             // Important: Call startPreview() to start updating the preview
             // surface. Preview must be started before you can take a picture.
             mCamera.startPreview();
+            startFaceDetection();
         } catch (IOException e) {
             Log.d(TAG, "Error setting camera preview: " + e.getMessage());
         }
@@ -139,6 +140,7 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
         try {
             mCamera.setPreviewDisplay(mHolder);
             mCamera.startPreview();
+            startFaceDetection();
         } catch (Exception e) {
             Log.d(TAG, "Error starting camera preview: " + e.getMessage());
         }
@@ -161,5 +163,17 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
             mCamera.stopPreview();
         }
         // empty. Take care of releasing the Camera preview in your activity.
+    }
+
+    //    开始人脸识别
+    public void startFaceDetection() {
+        // Try starting Face Detection
+        Camera.Parameters params = mCamera.getParameters();
+
+        // start face detection only *after* preview has started
+        if (params.getMaxNumDetectedFaces() > 0) {
+            // camera supports face detection, so can start it:
+            mCamera.startFaceDetection();
+        }
     }
 }

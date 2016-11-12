@@ -168,12 +168,30 @@ public class CameraUtil {
         return null;
     }
 
+    /**
+     * log Camera.Size
+     *
+     * @param TAG
+     * @param sizeList
+     * @see Camera.Parameters#getSupportedPictureSizes()
+     * @see Camera.Parameters#getSupportedPreviewSizes()
+     */
     public static void logSupportSize(String TAG, List<Camera.Size> sizeList) {
         //高宽比
+        Log.d(TAG, "start=========================================>");
         for (Camera.Size size : sizeList) {
             int width = size.width;
             int height = size.height;
             Log.d(TAG, width + " " + height + " " + (double) width / height + " " + Math.round(width * height / 100000) * 10 + "万");
         }
+        Log.d(TAG, "end=========================================>");
+    }
+
+    public static void logListString(String TAG, List<String> strings) {
+        Log.d(TAG, "=========================================>" + strings.size());
+        for (String str : strings) {
+            Log.d(TAG, "support:" + str);
+        }
+        Log.d(TAG, "=========================================>");
     }
 }
