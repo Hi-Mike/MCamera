@@ -6,14 +6,14 @@ import android.support.annotation.NonNull;
  * Created by ske on 2016/11/11.
  */
 
-public class PicSize implements Comparable {
+public class Size implements Comparable {
     /**
      * Sets the dimensions for pictures.
      *
      * @param w the photo width (pixels)
      * @param h the photo height (pixels)
      */
-    public PicSize(int w, int h) {
+    public Size(int w, int h) {
         width = w;
         height = h;
     }
@@ -34,7 +34,7 @@ public class PicSize implements Comparable {
 
     @Override
     public int compareTo(@NonNull Object o) {
-        PicSize size = (PicSize) o;
+        Size size = (Size) o;
         return size.width * size.height - width * height;
     }
 

@@ -3,9 +3,11 @@ package cn.mike.me.mcamera.utils;
 import android.app.Activity;
 import android.content.Context;
 import android.content.pm.PackageManager;
+import android.graphics.Point;
 import android.hardware.Camera;
 import android.os.Environment;
 import android.util.Log;
+import android.view.Display;
 import android.view.Surface;
 
 import com.orhanobut.logger.Logger;
@@ -18,7 +20,7 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 
-import cn.mike.me.mcamera.camera.PicSize;
+import cn.mike.me.mcamera.camera.Size;
 
 import static android.provider.MediaStore.Files.FileColumns.MEDIA_TYPE_IMAGE;
 import static android.provider.MediaStore.Files.FileColumns.MEDIA_TYPE_VIDEO;
@@ -92,6 +94,18 @@ public class CameraUtil {
     public static void setCameraDisplayOrientation(Activity activity, int cameraId, Camera camera) {
         Camera.CameraInfo info = new Camera.CameraInfo();
         android.hardware.Camera.getCameraInfo(cameraId, info);
+        int degrees = getDisplayRotation(activity);
+        int result;
+        if (info.facing == Camera.CameraInfo.CAMERA_FACING_FRONT) {
+            result = (info.orientation + degrees) % 360;
+            result = (360 - result) % 360;  // 前置摄像头，补偿镜面效果
+        } else {  // 后置摄像头
+            result = (info.orientation - degrees + 360) % 360;
+        }
+        camera.setDisplayOrientation(result);
+    }
+
+    public static int getDisplayRotation(Activity activity) {
         int rotation = activity.getWindowManager().getDefaultDisplay().getRotation();
         int degrees = 0;
         switch (rotation) {
@@ -108,14 +122,13 @@ public class CameraUtil {
                 degrees = 270;
                 break;
         }
-        int result;
-        if (info.facing == Camera.CameraInfo.CAMERA_FACING_FRONT) {
-            result = (info.orientation + degrees) % 360;
-            result = (360 - result) % 360;  // 前置摄像头，补偿镜面效果
-        } else {  // 后置摄像头
-            result = (info.orientation - degrees + 360) % 360;
-        }
-        camera.setDisplayOrientation(result);
+        return degrees;
+    }
+
+    public static int getDisplayWidth(Activity activity) {
+        Point point = new Point();
+        activity.getWindowManager().getDefaultDisplay().getSize(point);
+        return point.x;
     }
 
     /**
@@ -124,14 +137,24 @@ public class CameraUtil {
      * @param sizeList
      * @return
      */
-    public static List<PicSize> getFilterSupportPicSize(List<Camera.Size> sizeList) {
-        List<PicSize> result = new ArrayList<>();
+    public static List<Size> getFilterSupportPicSize(List<Camera.Size> sizeList) {
+        List<Size> result = new ArrayList<>();
         for (Camera.Size size : sizeList) {
             int width = size.width;
             int height = size.height;
             if (((4 * height == 3 * width) || (16 * height == 9 * width)) && width * height > 300000) {
-                result.add(new PicSize(size.width, size.height));
+                result.add(new Size(size.width, size.height));
             }
+        }
+        Collections.sort(result);
+        return result;
+    }
+
+    public static List<Size> getSortedSize(List<Camera.Size> sizeList) {
+        List<Size> result = new ArrayList<>();
+        for (Camera.Size size : sizeList) {
+            result.add(new Size(size.width, size.height));
+
         }
         Collections.sort(result);
         return result;
@@ -166,6 +189,35 @@ public class CameraUtil {
             }
         }
         return null;
+    }
+
+    public static Size getPreferSupportPreviewSize(int width, int height, List<Size> sizeList) {
+        Collections.sort(sizeList, (o1, o2) -> o2.width * o2.height - o1.width * o1.height);
+        for (Size size : sizeList) {
+            if (size.width * height == size.height * width) {
+                return size;
+            }
+        }
+
+        return getClosestSize(sizeList, (double) width / height);
+    }
+
+    /**
+     * @param sizes
+     * @param targetRatio 注意传double值
+     * @return
+     */
+    public static Size getClosestSize(List<Size> sizes, double targetRatio) {
+        Size optimalSize = null;
+        double minDiff = Double.MAX_VALUE;
+        for (Size size : sizes) {
+            double ratio = (double) size.width / size.height;
+            if (Math.abs(ratio - targetRatio) < minDiff) {
+                optimalSize = size;
+                minDiff = Math.abs(ratio - targetRatio);
+            }
+        }
+        return optimalSize;
     }
 
     /**

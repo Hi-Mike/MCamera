@@ -12,6 +12,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.orhanobut.logger.Logger;
 
@@ -19,6 +20,9 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import cn.mike.me.mcamera.camera.CameraActivity;
 import cn.mike.me.mcamera.utils.CameraUtil;
+import kr.co.namee.permissiongen.PermissionFail;
+import kr.co.namee.permissiongen.PermissionGen;
+import kr.co.namee.permissiongen.PermissionSuccess;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -40,25 +44,28 @@ public class MainActivity extends AppCompatActivity {
             btnOpen.setClickable(false);
         }
 
-        btnOpen.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-//                if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
-//                    ActivityCompat.requestPermissions(MainActivity.this,);
-//                } else if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-//
-//                } else {
-//                    startActivity(new Intent(MainActivity.this, CameraActivity.class));
-//                }
-                Logger.d((ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) + " " + ActivityCompat.shouldShowRequestPermissionRationale(MainActivity.this, Manifest.permission.CAMERA));
-                ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.CAMERA, Manifest.permission.WRITE_EXTERNAL_STORAGE}, 10086);
-            }
-        });
+        btnOpen.setOnClickListener(v -> {
+                    PermissionGen.with(this)
+                            .addRequestCode(10086)
+                            .permissions(Manifest.permission.CAMERA, Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                            .request();
+                }
+        );
     }
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        PermissionGen.onRequestPermissionsResult(this, requestCode, permissions, grantResults);
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+    }
+
+    @PermissionSuccess(requestCode = 10086)
+    void havePermission() {
         startActivity(new Intent(MainActivity.this, CameraActivity.class));
+    }
+
+    @PermissionFail(requestCode = 10086)
+    void haveNoPermission() {
+        Toast.makeText(this, "没有权限，请在应用设置中给出权限", Toast.LENGTH_SHORT).show();
     }
 }
